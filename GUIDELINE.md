@@ -49,7 +49,7 @@ Untuk dapat beroperasi secara legal di Indonesia:
 
 ---
 
-## 3. Kenapa Memakai NewSQL (TiDB / CockroachDB)?
+## 3. Kenapa Memakai NewSQL (CockroachDB)?
 
 1. **Strict ACID Consistency**: Menjamin tidak ada *double-spending* atau saldo selisih 1 rupiah pun.
 2. **Auto Distributed Sharding**: Mampu menangani ribuan node server tanpa mengorbankan integritas data.

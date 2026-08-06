@@ -1,7 +1,7 @@
 
 # Islamic Digital Currency Engine (IDCE) - Asset-Backed & Legal Compliant
 
-Sistem Ledger & Payment Engine untuk Mata Uang Digital Berbasis Syariat Islam (Al-Qur'an & Hadits) yang didukung oleh arsitektur **NewSQL (TiDB / CockroachDB)** untuk menjamin konsistensi data finansial tingkat tinggi (*Strict ACID*).
+Sistem Ledger & Payment Engine untuk Mata Uang Digital Berbasis Syariat Islam (Al-Qur'an & Hadits) yang didukung oleh arsitektur **NewSQL (CockroachDB)** untuk menjamin konsistensi data finansial tingkat tinggi (*Strict ACID*).
 
 Sistem ini terintegrasi langsung dengan **Modul Legalitas (Kantor Notaris & Pengacara)** untuk memenuhi keabsahan hukum positif di Indonesia dan diawasi oleh **Dewan Pengawas Syariah (DPS)**.
 
@@ -64,7 +64,7 @@ Untuk memenuhi regulasi Bappebti, OJK, dan Kemenkumham:
                v                               v
 ┌─────────────────────────────┐  ┌────────────────────────────────────┐
 │   NEWSQL DATABASE CLUSTER   │  │       PHYSICAL GOLD VAULT AUDIT    │
-│ (TiDB / CockroachDB Distributed│  │ (Oracle Real-Time Reserve Audit)   │
+│ (CockroachDB Distributed,   │  │ (Oracle Real-Time Reserve Audit)   │
 │  Strict ACID Financial Data)│  └────────────────────────────────────┘
 └─────────────────────────────┘
 ```
@@ -77,7 +77,7 @@ islamic-currency-engine/
 ├── GUIDELINE.md              # Spesifikasi Teknis & Landasan Syariat/Hukum
 ├── STYLE.md                  # Style Guide Tailwind CSS untuk React
 ├── backend-core/             # Node.js & Express.js API Gateway
-│   ├── config/               # Koneksi NewSQL (TiDB/CockroachDB via Sequelize/Prisma)
+│   ├── config/               # Koneksi NewSQL (CockroachDB via Sequelize)
 │   ├── keys/                 # RSA Keys & Signature Helper
 │   ├── utils/                # Ledger, Notary E-Sign & Shariah Audit Engine
 │   ├── controllers/          # Wallet, Legal, & Transaction Controllers
@@ -94,7 +94,7 @@ islamic-currency-engine/
     │   ├── services/         # CurrencyService (HTTP API)
     │   └── main.dart
 
-🗄️ Skema Database NewSQL (TiDB / CockroachDB)
+🗄️ Skema Database NewSQL (CockroachDB)
 
 
 CREATE DATABASE IF NOT EXISTS islamic_currency_db;
@@ -162,13 +162,17 @@ CREATE TABLE IF NOT EXISTS legal_contracts (
 
 PORT=5000
 
-# NewSQL Connection String (TiDB / CockroachDB)
+# Dialect: sqlite (dev) atau postgres (CockroachDB NewSQL)
+DB_DIALECT=sqlite
+SQLITE_PATH=./data/idce.sqlite
 
-NEWSQL_HOST=127.0.0.1
-NEWSQL_PORT=4000
-NEWSQL_USER=root
-NEWSQL_PASSWORD=secret_password
-NEWSQL_DB=islamic_currency_db
+# CockroachDB (NewSQL) - protokol PostgreSQL
+COCKROACH_HOST=127.0.0.1
+COCKROACH_PORT=26257
+COCKROACH_USER=root
+COCKROACH_PASSWORD=
+COCKROACH_DB=islamic_currency_db
+COCKROACH_SSL=true
 
 # Security & Cryptography
 
@@ -191,7 +195,7 @@ RSA_PRIVATE_KEY_PATH=./keys/private_key.pem
    npm run dev               # start server
    ```
 
-   > Untuk produksi NewSQL, ubah `.env` → `DB_DIALECT=mysql` lalu isi `NEWSQL_HOST`, `NEWSQL_PORT`, `NEWSQL_USER`, `NEWSQL_PASSWORD`.
+   > Untuk produksi NewSQL, ubah `.env` → `DB_DIALECT=postgres` lalu isi `COCKROACH_HOST`, `COCKROACH_PORT` (default `26257`), `COCKROACH_USER`, `COCKROACH_PASSWORD`, `COCKROACH_DB`.
    > RSA 2048-bit & kunci otomatis di-generate pada start pertama (folder `keys/`).
 
    Cek kesehatan: `curl http://localhost:5000/health`
@@ -240,13 +244,17 @@ curl http://localhost:5000/api/reserves/audit
 
 > File `idce.sqlite` baru muncul setelah server berjalan / `npm run seed` (satu file berisi semua tabel: `gold_reserves`, `user_wallets`, `syariah_transactions`, `legal_partners`, `legal_contracts`).
 
-### NewSQL TiDB / CockroachDB (mode produksi)
+### NewSQL CockroachDB (mode produksi)
 
-Ubah `.env` ke `DB_DIALECT=mysql` terlebih dahulu, lalu koneksi di Beekeeper:
+Ubah `.env` ke `DB_DIALECT=postgres` terlebih dahulu, lalu koneksi di Beekeeper:
 
-| Engine     | Tipe Koneksi Beekeeper | Host | Port | User | Password          | Database            |
-| :--------- | :--------------------- | :--- | :--- | :--- | :---------------- | :------------------ |
-| **TiDB**   | MySQL                  | `127.0.0.1` | `4000` | `root` | `secret_password` | `islamic_currency_db` |
-| **CockroachDB** | PostgreSQL        | `127.0.0.1` | `26257` | `root` | (kosong/root)     | `islamic_currency_db` |
+1. Buka **New Connection → PostgreSQL**.
+2. Isi kredensial berikut:
+   - Host: `127.0.0.1`
+   - Port: `26257`
+   - User: `root`
+   - Password: (kosong — default insecure CockroachDB lokal)
+   - Database: `islamic_currency_db`
+3. Klik **Test** → **Connect**.
 
-> ⚠️ **Catatan penting:** CockroachDB memakai protokol **PostgreSQL**, bukan MySQL. Jika target benar-benar CockroachDB, driver di `backend-core/config/database.js` dan dialect `.env` harus disesuaikan ke PostgreSQL (saat ini dialect NewSQL default = MySQL/TiDB).
+> ⚠️ **Catatan:** CockroachDB memakai protokol **PostgreSQL**, jadi tipe koneksi di Beekeeper adalah **PostgreSQL**, bukan MySQL/TiDB. Driver di `backend-core/config/database.js` sudah diset ke `postgres` (paket `pg`). Untuk cluster CockroachDB versi baru yang *secure by default*, aktifkan `COCKROACH_SSL=true` dan gunakan sertifikat/root user yang sesuai.
