@@ -224,3 +224,29 @@ curl -X POST http://localhost:5000/api/transactions/transfer -H "Content-Type: a
 # Audit cadangan emas (rasio proteksi syariah)
 curl http://localhost:5000/api/reserves/audit
 ```
+
+---
+
+## 🗄️ Akses Database via Beekeeper Studio
+
+### SQLite (mode dev — default)
+
+1. Buka **Beekeeper Studio** → **New Connection → SQLite**.
+2. Isi field `File` dengan path file DB. Karena DB disimpan di dalam WSL, dari Windows gunakan path WSL:
+   ```
+   \\wsl.localhost\Ubuntu\home\amirulpj\islamic-currency-engine\backend-core\data\idce.sqlite
+   ```
+3. Klik **Test** → **Connect**.
+
+> File `idce.sqlite` baru muncul setelah server berjalan / `npm run seed` (satu file berisi semua tabel: `gold_reserves`, `user_wallets`, `syariah_transactions`, `legal_partners`, `legal_contracts`).
+
+### NewSQL TiDB / CockroachDB (mode produksi)
+
+Ubah `.env` ke `DB_DIALECT=mysql` terlebih dahulu, lalu koneksi di Beekeeper:
+
+| Engine     | Tipe Koneksi Beekeeper | Host | Port | User | Password          | Database            |
+| :--------- | :--------------------- | :--- | :--- | :--- | :---------------- | :------------------ |
+| **TiDB**   | MySQL                  | `127.0.0.1` | `4000` | `root` | `secret_password` | `islamic_currency_db` |
+| **CockroachDB** | PostgreSQL        | `127.0.0.1` | `26257` | `root` | (kosong/root)     | `islamic_currency_db` |
+
+> ⚠️ **Catatan penting:** CockroachDB memakai protokol **PostgreSQL**, bukan MySQL. Jika target benar-benar CockroachDB, driver di `backend-core/config/database.js` dan dialect `.env` harus disesuaikan ke PostgreSQL (saat ini dialect NewSQL default = MySQL/TiDB).
