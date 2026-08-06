@@ -179,20 +179,48 @@ RSA_PRIVATE_KEY_PATH=./keys/private_key.pem
 
 🚀 Panduan Memulai
 
-1. Run Backend Core Engine
-2. cd backend-core
-3. npm install
-4. npm run dev
+**Prasyarat:** Node.js ≥ 18, Flutter ≥ 3.0 (untuk mobile).
 
+1. **Run Backend Core Engine** (`http://localhost:5000`)
 
-2. Run React.js Dashboard
-3. cd frontend-dashboard
+   ```bash
+   cd backend-core
+   cp .env.example .env      # default: DB_DIALECT=sqlite (dev lokal)
+   npm install
+   npm run seed              # opsional: isi contoh wallet, vault, notaris
+   npm run dev               # start server
+   ```
+
+   > Untuk produksi NewSQL, ubah `.env` → `DB_DIALECT=mysql` lalu isi `NEWSQL_HOST`, `NEWSQL_PORT`, `NEWSQL_USER`, `NEWSQL_PASSWORD`.
+   > RSA 2048-bit & kunci otomatis di-generate pada start pertama (folder `keys/`).
+
+   Cek kesehatan: `curl http://localhost:5000/health`
+
+2. **Run React.js Dashboard** (`http://localhost:5173`, proxy ke `:5000`)
+
+   ```bash
+   cd frontend-dashboard
    npm install
    npm run dev
+   ```
 
+3. **Run Flutter Mobile App** (pastikan backend aktif)
 
-3. Run Flutter Mobile App
+   ```bash
+   cd mobile_wallet
+   flutter pub get
+   flutter run            # emulator/device; default API: http://10.0.2.2:5000/api
+   ```
 
-cd mobile_wallet
-flutter pub get
-flutter run
+**Alur API singkat**
+```bash
+# Buat wallet (idempotent - ulang panggil aman)
+curl -X POST http://localhost:5000/api/wallets -H "Content-Type: application/json" -d '{"user_id":"alice"}'
+
+# Transfer akad Sarf (1 Dinar = 4.25 gr emas, settlement kontan)
+curl -X POST http://localhost:5000/api/transactions/transfer -H "Content-Type: application/json" \
+  -d '{"sender":"<WALLET_ALICE>","receiver":"<WALLET_BOB>","amount":5,"akad_type":"SARF"}'
+
+# Audit cadangan emas (rasio proteksi syariah)
+curl http://localhost:5000/api/reserves/audit
+```
