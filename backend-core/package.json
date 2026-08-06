@@ -1,0 +1,27 @@
+{
+  "name": "islamic-currency-engine-backend",
+  "version": "1.0.0",
+  "description": "Islamic Digital Currency Engine - Core API Gateway (Syariah Validator, Notary E-Sign, NewSQL Ledger)",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "keys": "node scripts/generateKeys.js",
+    "seed": "node scripts/seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mysql2": "^3.11.0",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {}
+}
