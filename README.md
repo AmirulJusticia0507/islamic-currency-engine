@@ -221,9 +221,19 @@ RSA_PRIVATE_KEY_PATH=./keys/private_key.pem
 # Buat wallet (idempotent - ulang panggil aman)
 curl -X POST http://localhost:5000/api/wallets -H "Content-Type: application/json" -d '{"user_id":"alice"}'
 
-# Transfer akad Sarf (1 Dinar = 4.25 gr emas, settlement kontan)
+# Daftarkan perangkat biometrik, lalu verifikasi sidik jari -> biometric_token (berlaku 2 menit)
+curl -X POST http://localhost:5000/api/biometric/register -H "Content-Type: application/json" \
+  -d '{"wallet_address":"<WALLET_ALICE>","device_id":"dev-1","device_name":"Pixel 8"}'
+curl -X POST http://localhost:5000/api/biometric/verify -H "Content-Type: application/json" \
+  -d '{"wallet_address":"<WALLET_ALICE>","device_id":"dev-1"}'   # -> {"token":"..."}
+
+# Transfer akad Sarf (1 Dinar = 4.25 gr emas, settlement kontan, WAJIB biometric_token)
 curl -X POST http://localhost:5000/api/transactions/transfer -H "Content-Type: application/json" \
-  -d '{"sender":"<WALLET_ALICE>","receiver":"<WALLET_BOB>","amount":5,"akad_type":"SARF"}'
+  -d '{"sender":"<WALLET_ALICE>","receiver":"<WALLET_BOB>","amount":5,"akad_type":"SARF","biometric_token":"<TOKEN>"}'
+
+# QRIS (payload EMVCo TLV2 + gambar QR PNG base64)
+curl "http://localhost:5000/api/qris/<WALLET_ALICE>/payload?amount=5"
+curl "http://localhost:5000/api/qris/<WALLET_ALICE>/qr?amount=5"
 
 # Audit cadangan emas (rasio proteksi syariah)
 curl http://localhost:5000/api/reserves/audit

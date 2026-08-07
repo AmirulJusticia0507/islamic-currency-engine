@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { LegalNotaryCard } from "../components/LegalNotaryCard";
+import { BiometricPanel } from "../components/BiometricDevicePanel";
 
 export function Legal() {
   const [contracts, setContracts] = useState([]);
@@ -67,6 +68,10 @@ export function Legal() {
           ))}
           {!partners.length && <div className="px-6 py-4 text-sm text-slate-400">Belum ada mitra hukum.</div>}
         </div>
+      </div>
+
+      <div className="max-w-2xl">
+        <BiometricPanel />
       </div>
     </div>
   );

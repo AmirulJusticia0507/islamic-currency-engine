@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/currency_service.dart';
 import '../models/wallet.dart';
 import '../models/transaction.dart';
+import 'qris_receive_screen.dart';
 
 const _storage = FlutterSecureStorage();
 
@@ -47,7 +48,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final wallet = _wallet;
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            tooltip: 'QRIS Terima',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const QrisReceiveScreen()),
+            ),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(

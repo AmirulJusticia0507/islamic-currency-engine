@@ -12,6 +12,8 @@ const SyariahTransaction = sequelize.define(
     akad_type: { type: DataTypes.ENUM("SARF", "WADIAH", "UJRAH"), allowNull: false },
     underlying_gold_gram: { type: DataTypes.DECIMAL(18, 6), allowNull: false },
     status: { type: DataTypes.ENUM("PENDING", "SUCCESS", "REJECTED"), defaultValue: "PENDING", allowNull: false },
+    biometric_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
+    verified_device_id: { type: DataTypes.STRING(100), allowNull: true },
     note: { type: DataTypes.STRING(255), allowNull: true },
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   },

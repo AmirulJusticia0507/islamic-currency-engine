@@ -8,6 +8,8 @@ const walletRoutes = require("./routes/wallet.routes");
 const transactionRoutes = require("./routes/transaction.routes");
 const legalRoutes = require("./routes/legal.routes");
 const reserveRoutes = require("./routes/reserve.routes");
+const biometricRoutes = require("./routes/biometric.routes");
+const qrisRoutes = require("./routes/qris.routes");
 const { notFound, errorHandler } = require("./middleware");
 
 const app = express();
@@ -23,6 +25,8 @@ app.use("/api/wallets", walletRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/legal", legalRoutes);
 app.use("/api/reserves", reserveRoutes);
+app.use("/api/biometric", biometricRoutes);
+app.use("/api/qris", qrisRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -3,7 +3,7 @@ const { sequelize, SyariahTransaction, UserWallet } = require("../models");
 const { buildCanonicalMessage, assertNoRiba } = require("./shariahValidator");
 const { rsaSign, hmacSign } = require("./keys");
 
-async function atomicTransfer({ sender, receiver, amount, akadType, goldGram, note }) {
+async function atomicTransfer({ sender, receiver, amount, akadType, goldGram, note, biometricVerified = false, verifiedDeviceId = null }) {
   const t = await sequelize.transaction();
   try {
     const senderRow = await UserWallet.findByPk(sender, { transaction: t, lock: t.LOCK.UPDATE });
@@ -47,6 +47,8 @@ async function atomicTransfer({ sender, receiver, amount, akadType, goldGram, no
         underlying_gold_gram: goldGram,
         status: "SUCCESS",
         note: note || null,
+        biometric_verified: biometricVerified,
+        verified_device_id: verifiedDeviceId,
       },
       { transaction: t }
     );

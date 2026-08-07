@@ -1,8 +1,11 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import '../services/currency_service.dart';
 
 const _storage = FlutterSecureStorage();
+final _localAuth = LocalAuthentication();
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -20,6 +23,32 @@ class _TransferScreenState extends State<TransferScreen> {
   String _result = '';
   bool _isError = false;
 
+  Future<String> _getDeviceId() async {
+    var id = await _storage.read(key: 'device_id');
+    if (id == null) {
+      id = 'DEV-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(9000) + 1000}';
+      await _storage.write(key: 'device_id', value: id);
+    }
+    return id!;
+  }
+
+  Future<bool> _authenticate() async {
+    try {
+      final available = await _localAuth.canCheckBiometrics;
+      if (!available) {
+        setState(() => _result = 'Perangkat tidak mendukung sidik jari / biometrik.');
+        return false;
+      }
+      return await _localAuth.authenticate(
+        localizedReason: 'Verifikasi sidik jari untuk mengotorisasi transaksi Akad Sarf',
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+    } catch (e) {
+      setState(() => _result = 'Gagal memanggil biometrik: $e');
+      return false;
+    }
+  }
+
   Future<void> _send() async {
     final sender = await _storage.read(key: 'wallet_address') ?? '';
     final receiver = _receiver.text.trim();
@@ -31,21 +60,38 @@ class _TransferScreenState extends State<TransferScreen> {
       });
       return;
     }
+
     setState(() {
       _loading = true;
       _isError = false;
-      _result = '';
+      _result = 'Meminta verifikasi sidik jari...';
     });
+
     try {
+      final ok = await _authenticate();
+      if (!ok) {
+        setState(() {
+          _loading = false;
+          _isError = true;
+          _result = 'Verifikasi biometrik dibatalkan / gagal. Transaksi batal.';
+        });
+        return;
+      }
+
+      final deviceId = await _getDeviceId();
+      await _service.registerBiometric(walletAddress: sender, deviceId: deviceId, deviceName: 'IDCE Mobile');
+      final token = await _service.verifyBiometric(walletAddress: sender, deviceId: deviceId);
+
       final res = await _service.transfer(
         sender: sender,
         receiver: receiver,
         amount: amount,
         akadType: _akad,
+        biometricToken: token,
       );
       setState(() {
         _isError = false;
-        _result = '✔ SUCCESS\nHash: ${res['transaction_hash']}\nUnderlying: ${res['underlying_gold_gram']} gr emas';
+        _result = '✔ SUCCESS (Biometrik terverifikasi)\nHash: ${res['transaction_hash']}\nUnderlying: ${res['underlying_gold_gram']} gr emas';
       });
     } catch (e) {
       setState(() {
@@ -122,7 +168,7 @@ class _TransferScreenState extends State<TransferScreen> {
                       ),
                       child: _loading
                           ? const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                          : const Text('Kirim (Settlement Real-time)'),
+                          : const Text('Kirim (Verifikasi Sidik Jari + Settlement)'),
                     ),
                   ),
                   if (_result.isNotEmpty) ...[

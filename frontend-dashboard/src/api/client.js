@@ -21,4 +21,9 @@ export const api = {
   createPartner: (body) => request("/legal/partners", { method: "POST", body: JSON.stringify(body) }),
   createContract: (body) => request("/legal/contracts", { method: "POST", body: JSON.stringify(body) }),
   getWallets: (addr) => request(`/wallets/${addr}`),
+  registerBiometric: (body) => request("/biometric/register", { method: "POST", body: JSON.stringify(body) }),
+  verifyBiometric: (body) => request("/biometric/verify", { method: "POST", body: JSON.stringify(body) }),
+  listDevices: (wallet) => request(`/biometric?wallet_address=${wallet || ""}`),
+  getQrisImage: (wallet, amount) => request(`/qris/${wallet}/qr${amount ? `?amount=${amount}` : ""}`),
+  getQrisPayload: (wallet, amount) => request(`/qris/${wallet}/payload${amount ? `?amount=${amount}` : ""}`),
 };
