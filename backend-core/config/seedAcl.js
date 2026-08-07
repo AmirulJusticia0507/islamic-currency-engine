@@ -2,10 +2,10 @@ const { Role, Permission, RolePermission } = require("../models");
 
 const ACL = {
   ADMIN: ["*"],
-  AUDITOR: ["dashboard.view", "reserve.read", "reserve.audit", "reserve.create", "transaction.read"],
-  NOTARY: ["dashboard.view", "legal.read", "legal.sign", "legal.manage", "transaction.read"],
-  LEGAL: ["dashboard.view", "legal.read", "legal.manage", "transaction.read"],
-  USER: ["dashboard.view", "wallet.create", "wallet.read", "transaction.read", "transaction.transfer", "biometric.manage", "qris.read", "reserve.read", "reserve.audit", "legal.read"],
+  AUDITOR: ["dashboard.view", "reserve.read", "reserve.audit", "reserve.create", "transaction.read", "audit.read", "escrow.read", "oracle.read", "notification.read", "legal.verify"],
+  NOTARY: ["dashboard.view", "legal.read", "legal.sign", "legal.manage", "legal.verify", "transaction.read", "escrow.read", "oracle.read", "notification.read"],
+  LEGAL: ["dashboard.view", "legal.read", "legal.manage", "legal.verify", "transaction.read", "escrow.read", "escrow.dispute", "oracle.read", "notification.read"],
+  USER: ["dashboard.view", "wallet.create", "wallet.read", "transaction.read", "transaction.transfer", "biometric.manage", "qris.read", "reserve.read", "reserve.audit", "legal.read", "legal.verify", "escrow.read", "escrow.write", "oracle.read", "notification.read"],
 };
 
 async function seedAcl() {

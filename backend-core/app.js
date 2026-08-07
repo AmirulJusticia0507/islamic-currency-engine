@@ -11,6 +11,10 @@ const reserveRoutes = require("./routes/reserve.routes");
 const biometricRoutes = require("./routes/biometric.routes");
 const qrisRoutes = require("./routes/qris.routes");
 const authRoutes = require("./routes/auth.routes");
+const oracleRoutes = require("./routes/oracle.routes");
+const escrowRoutes = require("./routes/escrow.routes");
+const auditRoutes = require("./routes/audit.routes");
+const notificationRoutes = require("./routes/notification.routes");
 const { notFound, errorHandler } = require("./middleware");
 
 const app = express();
@@ -29,6 +33,10 @@ app.use("/api/legal", legalRoutes);
 app.use("/api/reserves", reserveRoutes);
 app.use("/api/biometric", biometricRoutes);
 app.use("/api/qris", qrisRoutes);
+app.use("/api/oracle", oracleRoutes);
+app.use("/api/escrows", escrowRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

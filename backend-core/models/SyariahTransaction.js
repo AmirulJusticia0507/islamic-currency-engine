@@ -14,6 +14,7 @@ const SyariahTransaction = sequelize.define(
     status: { type: DataTypes.ENUM("PENDING", "SUCCESS", "REJECTED"), defaultValue: "PENDING", allowNull: false },
     biometric_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
     verified_device_id: { type: DataTypes.STRING(100), allowNull: true },
+    notary_signature: { type: DataTypes.TEXT, allowNull: true },
     note: { type: DataTypes.STRING(255), allowNull: true },
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   },

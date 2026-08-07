@@ -289,6 +289,58 @@ curl -X POST http://localhost:5000/api/auth/users/<user_id>/roles -H "Authorizat
 
 ---
 
+## 🛠️ Fitur Lanjutan (Oracle, Escrow, Akta, Verifikasi)
+
+### 🏅 Oracle Harga Emas Real-time
+Sumber LIVE `api.gold-api.com/price/XAU` (per troy-ounce, diubah ke per gram & per Dinar; 1 Dinar = 4.25 gr emas 24K). Bila sumber mati, memakai harga statis fallback dengan `source: "DEFAULT"`. Setiap pembacaan dicatat ke tabel `gold_prices` untuk riwayat chart.
+
+```bash
+GET /api/oracle/gold              # harga sekarang (sumber + waktu update)
+GET /api/oracle/gold/history?limit=30  # 30 titik untuk chart
+```
+
+### 🧾 Escrow Cerdas & Sengketa Tahkim/BASYARNAS
+Escrow mengunci (hold) dana dari wallet pembayar ke rekening amanah, lalu di-release/refund, atau dibuka sebagai sengketa bila ada sengketa. Model baru: `escrows`, `legal_disputes`.
+
+```bash
+POST /api/escrows                                  # buat escrow (dana di-kunci)
+POST /api/escrows/:id/release                    # penyerahan ke penerima
+POST /api/escrows/:id/refund                      # pengembalian ke pembayar
+POST /api/escrows/dispute                          # buka sengketa (claim)
+POST /api/escrows/disputes/:id/resolve             # keputusan BASYARNAS (side: A | B | split)
+GET  /api/escrows · GET /api/escrows/disputes       # daftar escrow & sengketa
+```
+
+### 📄 Akta PDF Otentik (E-Signature RSA 2048)
+Buat kontrak → sistem membubuhkan **tanda tangan digital RSA** atas dokumen akta dan **menghasilkan PDF** akta kitabah & syahadah yang dapat diunduh & divertif.
+
+```bash
+POST /api/legal/contracts          # buat akta; respons berisi base64 PDF akta
+GET  /api/legal/contracts/:id/pdf     # unduh akta PDF
+GET  /api/legal/contracts/:id/verify  # verifikasi keaslian tanda tangan RSA
+```
+
+> Setiap `SyariahTransaction` kini menyimpan `notary_signature` (RSA). Verifikasi transaksi memakai canonical yang dibentuk **dari baris yang tersimpan** agar *sign* & *verify* selalu identik (sebelumnya fungsi verify tidak konsisten).
+
+```bash
+POST /api/transactions/:hash/verify   # body: { notary_signature } -> { valid }
+```
+
+### 🧾 Audit Trail & Notifikasi
+- `AuditLog` mencatat setiap aksi penting secara immutable → `GET /api/audit`.
+- `Notification` mengirim notifikasi push ke user event (mis. transfer sukses) → `GET /api/notifications`, `POST /api/notifications/:id/read`.
+- Riwayat transaksi kini **terpaginasi** = `GET /api/transactions?limit=20&offset=0&sender_wallet=...&akad_type=...`.
+
+### 🖥️ Panel Dashboard Baru
+- **Harga Emas** (oracle + grafik SVG dari history).
+- **Admin User** (`user:manage`) — kelola role per pengguna.
+- **Audit & Escrow** — jejak audit, notifikasi, escrow, dan sengketa.
+- **Verifikasi** — tombol cek signature transaksi & akta langsung di UI.
+
+Permission baru yang ditambahkan ke ACL: `oracle.read`, `escrow.read`, `escrow.write`, `escrow.dispute`, `audit.read`, `legal.verify`, `notification.read` (seed otomatis via `seedAcl` saat server start).
+
+---
+
 ## 🔒 Privasi Autentikasi Biometrik (Fingerprint)
 
 **Data biometrik Anda TIDAK pernah disimpan** — baik di database, server, maupun dikirim melalui jaringan.
@@ -320,7 +372,7 @@ curl -X POST http://localhost:5000/api/auth/users/<user_id>/roles -H "Authorizat
    ```
 3. Klik **Test** → **Connect**.
 
-> File `idce.sqlite` baru muncul setelah server berjalan / `npm run seed` (satu file berisi semua tabel: `gold_reserves`, `user_wallets`, `syariah_transactions`, `legal_partners`, `legal_contracts`).
+> File `idce.sqlite` baru muncul setelah server berjalan / `npm run seed` (satu file berisi semua tabel: `gold_reserves`, `user_wallets`, `syariah_transactions`, `legal_partners`, `legal_contracts`, `escrows`, `legal_disputes`, `gold_prices`, `audit_logs`, `notifications`, `users`, `roles`, `permissions`).
 
 ### NewSQL CockroachDB (mode produksi)
 

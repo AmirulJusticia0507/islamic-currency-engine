@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { SyariahTransactionTable } from "../components/SyariahTransactionTable";
 import { QrisCard } from "../components/QrisCard";
+import { VerifySignatureCard } from "../components/VerifySignatureCard";
 
 const EMPTY = { sender: "", receiver: "", amount: "", akad_type: "SARF" };
 
@@ -122,6 +123,7 @@ export function Transactions() {
           <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-3">Ledger Syariah</h3>
           <SyariahTransactionTable transactions={transactions} />
           <QrisCard />
+          <VerifySignatureCard />
         </div>
       </div>
     </div>

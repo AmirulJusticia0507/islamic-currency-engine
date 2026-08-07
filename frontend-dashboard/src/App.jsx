@@ -5,6 +5,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { Transactions } from "./pages/Transactions";
 import { Reserves } from "./pages/Reserves";
 import { Legal } from "./pages/Legal";
+import { Gold } from "./pages/Gold";
+import { Admin } from "./pages/Admin";
+import { Audit } from "./pages/Audit";
 import { api, getToken, setToken } from "./api/client";
 
 const PAGES = {
@@ -12,6 +15,9 @@ const PAGES = {
   transactions: Transactions,
   reserves: Reserves,
   legal: Legal,
+  gold: Gold,
+  admin: Admin,
+  audit: Audit,
 };
 
 export default function App() {

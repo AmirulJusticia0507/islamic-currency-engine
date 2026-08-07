@@ -1,8 +1,11 @@
 const NAV_ITEMS = [
   { key: "dashboard", label: "📊 Dashboard", perm: "dashboard.view" },
   { key: "transactions", label: "🔁 Transaksi (Sarf)", perm: "transaction.read" },
+  { key: "gold", label: "🏅 Harga Emas", perm: "oracle.read" },
   { key: "reserves", label: "🥇 Vault Audit", perm: "reserve.read" },
   { key: "legal", label: "⚖️ Legal & Notaris", perm: "legal.read" },
+  { key: "audit", label: "🗂️ Audit & Escrow", perm: "audit.read" },
+  { key: "admin", label: "👥 Admin User", perm: "user:manage" },
 ];
 
 export function Navbar({ active, onChange, permissions = [], onLogout, user }) {

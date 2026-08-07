@@ -31,6 +31,8 @@ exports.transfer = async (req, res) => {
   });
 
   if (!result.ok) return res.status(422).json({ status: result.status, reason: result.reason });
+  const { push } = require("../utils/notify");
+  push(req.user.id, "transaction", "Transfer Berhasil", `Transfer ${amount} Dinar ke ${receiver} selesai (${result.transaction.transaction_hash.slice(0, 12)}...)`).catch(() => {});
   res.status(201).json({
     status: result.status,
     transaction_hash: result.transaction.transaction_hash,
@@ -53,8 +55,18 @@ exports.verifySignature = async (req, res) => {
 };
 
 exports.list = async (req, res) => {
-  const transactions = await SyariahTransaction.findAll({ order: [["created_at", "DESC"]], limit: 100 });
-  res.json({ transactions });
+  const { limit = 20, offset = 0, sender_wallet, receiver_wallet, akad_type } = req.query;
+  const where = {};
+  if (sender_wallet) where.sender_wallet = sender_wallet;
+  if (receiver_wallet) where.receiver_wallet = receiver_wallet;
+  if (acak_type) where.akad_type = acak_type;
+  const { rows, count } = await SyariahTransaction.findAndCountAll({
+    where,
+    order: [["created_at", "DESC"]],
+    limit: Math.min(Number(limit) || 20, 200),
+    offset: Number(offset) || 0,
+  });
+  res.json({ total: count, limit: Number(limit) || 20, offset: Number(offset) || 0, transactions: rows });
 };
 
 exports.getByHash = async (req, res) => {

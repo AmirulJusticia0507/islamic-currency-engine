@@ -27,19 +27,9 @@ async function atomicTransfer({ sender, receiver, amount, akadType, goldGram, no
     await senderRow.save({ transaction: t });
     await receiverRow.save({ transaction: t });
 
-    const canonical = buildCanonicalMessage({
-      sender_wallet: sender,
-      receiver_wallet: receiver,
-      amount_dinar: amount,
-      akad_type: akadType,
-      underlying_gold_gram: goldGram,
-    });
-    const notarySignature = rsaSign(canonical);
-    const transactionHash = hmacSign(canonical);
-
     const txRecord = await SyariahTransaction.create(
       {
-        transaction_hash: transactionHash,
+        transaction_hash: "PENDING",
         sender_wallet: sender,
         receiver_wallet: receiver,
         amount_dinar: amount,
@@ -49,9 +39,20 @@ async function atomicTransfer({ sender, receiver, amount, akadType, goldGram, no
         note: note || null,
         biometric_verified: biometricVerified,
         verified_device_id: verifiedDeviceId,
+        created_at: new Date(),
+        notary_signature: null,
       },
       { transaction: t }
     );
+
+    // canonical selalu dibentuk dari baris mentah yang tersimpan, agar verify & sign sama persis
+    const canonical = buildCanonicalMessage(txRecord);
+    const notarySignature = rsaSign(canonical);
+    const transactionHash = hmacSign(canonical);
+
+    txRecord.transaction_hash = transactionHash;
+    txRecord.notary_signature = notarySignature;
+    await txRecord.save({ transaction: t });
 
     await t.commit();
     return { ok: true, transaction: txRecord, notarySignature, status: "SUCCESS" };

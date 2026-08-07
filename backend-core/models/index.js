@@ -10,6 +10,11 @@ const Role = require("./Role");
 const Permission = require("./Permission");
 const UserRole = require("./UserRole");
 const RolePermission = require("./RolePermission");
+const Escrow = require("./Escrow");
+const LegalDispute = require("./LegalDispute");
+const GoldPrice = require("./GoldPrice");
+const AuditLog = require("./AuditLog");
+const Notification = require("./Notification");
 
 SyariahTransaction.belongsTo(UserWallet, { foreignKey: "sender_wallet", targetKey: "wallet_address", as: "sender" });
 SyariahTransaction.belongsTo(UserWallet, { foreignKey: "receiver_wallet", targetKey: "wallet_address", as: "receiver" });
@@ -20,6 +25,9 @@ User.belongsToMany(Role, { through: UserRole, foreignKey: "user_id", otherKey: "
 Role.belongsToMany(User, { through: UserRole, foreignKey: "role_id", otherKey: "user_id", as: "users" });
 Role.belongsToMany(Permission, { through: RolePermission, foreignKey: "role_id", otherKey: "permission_id", as: "permissions" });
 Permission.belongsToMany(Role, { through: RolePermission, foreignKey: "permission_id", otherKey: "role_id", as: "roles" });
+
+LegalDispute.belongsTo(Escrow, { foreignKey: "escrow_id", as: "escrow" });
+Escrow.belongsTo(UserWallet, { foreignKey: "payee_wallet", targetKey: "wallet_address", as: "payee" });
 
 module.exports = {
   sequelize,
@@ -34,4 +42,9 @@ module.exports = {
   Permission,
   UserRole,
   RolePermission,
+  Escrow,
+  LegalDispute,
+  GoldPrice,
+  AuditLog,
+  Notification,
 };
