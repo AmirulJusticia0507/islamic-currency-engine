@@ -241,6 +241,26 @@ curl http://localhost:5000/api/reserves/audit
 
 ---
 
+## 🔒 Privasi Autentikasi Biometrik (Fingerprint)
+
+**Data biometrik Anda TIDAK pernah disimpan** — baik di database, server, maupun dikirim melalui jaringan.
+
+- Verifikasi sidik jari diproses **lokal di dalam perangkat** (secure enclave / Touch ID / Face ID / Keystore Android) oleh `local_auth`.
+- OS hanya mengembalikan hasil `true/false`; citra sidik jari tidak pernah keluar dari perangkat.
+- Yang tersimpan di database hanya **metadata perangkat** pada tabel `authenticated_devices`, bukan sidik jari:
+
+  | Kolom | Isi |
+  | :--- | :--- |
+  | `device_id` | ID perangkat (generated, bukan biometrik) |
+  | `wallet_address` | pemilik wallet |
+  | `device_name` | label (mis. "Pixel 8") |
+  | `status` / `last_verified_at` | aktif vs dicabut · waktu verifikasi terakhir |
+
+- Alur otorisasi transfer: OS cek sidik jari secara lokal → bila sukses backend menerbitkan `biometric_token` sah sementara (2 menit) → transfer dieksekusi. Yang membuktikan autentikasi adalah biometrik pada perangkat (*device fingerprint*), sedangkan database hanya mencatat perangkat yang diizinkan (`device_id`).
+- Perangkat dapat dicabut (revoke) kapan saja lewat `DELETE /api/biometric/:device_id`.
+
+---
+
 ## 🗄️ Akses Database via Beekeeper Studio
 
 ### SQLite (mode dev — default)
