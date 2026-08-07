@@ -100,7 +100,7 @@ export function Audit({ permissions = [] }) {
                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${BADGE(TONE[esc.status] || "slate")}`}>{esc.status}</span>
                 <span className="text-xs text-slate-400">{esc.amount_dinar} Dinar</span>
                 <span className="text-[11px] text-slate-500 font-mono hidden md:inline">→ {esc.payee_wallet}</span>
-                {esc.status === "HOLDING" && (
+                {esc.status === "HOLDING" && can("escrow.settle") && (
                   <div className="flex gap-2 ml-auto">
                     <button
                       onClick={() => act(`rel-${esc.id}`, () => api.releaseEscrow(esc.id))}
@@ -116,15 +116,17 @@ export function Audit({ permissions = [] }) {
                     >
                       ↺ Refund
                     </button>
-                    {can("escrow.dispute") && (
-                      <button
-                        onClick={() => act(`dis-${esc.id}`, () => api.openDispute({ escrow_id: esc.id, claim: "Sengketa diajukan dari dashboard" }))}
-                        disabled={busy !== null}
-                        className={`${BTN} bg-rose-800 hover:bg-rose-700 text-white`}
-                      >
-                        ⚡ Sengketa
-                      </button>
-                    )}
+                  </div>
+                )}
+                {esc.status === "HOLDING" && can("escrow.dispute") && (
+                  <div className="flex gap-2 ml-auto">
+                    <button
+                      onClick={() => act(`dis-${esc.id}`, () => api.openDispute({ escrow_id: esc.id, claim: "Sengketa diajukan dari dashboard" }))}
+                      disabled={busy !== null}
+                      className={`${BTN} bg-rose-800 hover:bg-rose-700 text-white`}
+                    >
+                      ⚡ Sengketa
+                    </button>
                   </div>
                 )}
               </div>
@@ -141,7 +143,7 @@ export function Audit({ permissions = [] }) {
                 <span className="text-xs font-mono text-white">{dis.case_number}</span>
                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${dis.status === "OPEN" ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"}`}>{dis.status}</span>
                 <span className="text-xs text-slate-400">{dis.amount_dinar} Dinar · {dis.adjudication}</span>
-                {dis.status === "OPEN" && can("escrow.dispute") ? (
+                {dis.status === "OPEN" && can("escrow.resolve") ? (
                   <div className="flex gap-2 ml-auto">
                     {["A", "B", "split"].map((side) => (
                       <button
