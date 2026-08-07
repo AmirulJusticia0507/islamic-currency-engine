@@ -168,12 +168,16 @@ export function Legal() {
             <button type="button" onClick={load} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all">↻ Refresh</button>
           </div>
         </form>
-        {createdPdf && (
+{createdPdf && (
           <div className="mt-4 flex flex-wrap items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-4 py-3">
             <p className="text-xs text-emerald-400 font-bold">✔ Akta terbit & ditandatangani RSA Notaris. Unduh:</p>
             <button onClick={downloadPdf} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg transition-all">⬇️ Unduh PDF ({Math.round(createdPdf.length * 0.75 / 1024)} KB)</button>
           </div>
         )}
+      </div>
+
+      <div className="max-w-2xl">
+        <BiometricPanel />
       </div>
     </div>
   );
