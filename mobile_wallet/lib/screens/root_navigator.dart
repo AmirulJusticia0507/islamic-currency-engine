@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../services/currency_service.dart';
 import 'dashboard_screen.dart';
 import 'transfer_screen.dart';
 import 'vault_audit_screen.dart';
@@ -26,7 +27,9 @@ class _RootNavigatorState extends State<RootNavigator> {
   ];
 
   Future<void> _logout() async {
+    setAuthToken(null);
     await _storage.delete(key: 'auth_token');
+    await _storage.delete(key: 'token');
     await _storage.delete(key: 'wallet_address');
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(

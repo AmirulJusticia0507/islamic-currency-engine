@@ -1,16 +1,29 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
+let _token = localStorage.getItem("idce_token") || "";
+
+export const setToken = (t) => {
+  _token = t;
+  if (t) localStorage.setItem("idce_token", t);
+  else localStorage.removeItem("idce_token");
+};
+export const getToken = () => _token;
+
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options,
-  });
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (_token) headers.Authorization = `Bearer ${_token}`;
+  const res = await fetch(`${BASE_URL}${path}`, { headers, ...options });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || data.reason || `HTTP ${res.status}`);
   return data;
 }
 
 export const api = {
+  register: (body) => request("/auth/register", { method: "POST", body: JSON.stringify(body) }),
+  login: (body) => request("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+  me: () => request("/auth/me"),
+  listUsers: () => request("/auth/users"),
+  assignRole: (userId, role) => request(`/auth/users/${userId}/roles`, { method: "POST", body: JSON.stringify({ role }) }),
   getReserves: () => request("/reserves"),
   getAudit: () => request("/reserves/audit"),
   createReserve: (body) => request("/reserves", { method: "POST", body: JSON.stringify(body) }),

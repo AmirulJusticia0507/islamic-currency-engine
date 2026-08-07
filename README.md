@@ -218,26 +218,74 @@ RSA_PRIVATE_KEY_PATH=./keys/private_key.pem
 
 **Alur API singkat**
 ```bash
-# Buat wallet (idempotent - ulang panggil aman)
-curl -X POST http://localhost:5000/api/wallets -H "Content-Type: application/json" -d '{"user_id":"alice"}'
+# 1. Login -> dapat JWT (semua request berikut wajib Authorization: Bearer <TOKEN>)
+TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login -H "Content-Type: application/json" \
+  -d '{"user_id":"admin","password":"admin123"}' | jq -r .token)
+AUTH="Authorization: Bearer $TOKEN"
 
-# Daftarkan perangkat biometrik, lalu verifikasi sidik jari -> biometric_token (berlaku 2 menit)
-curl -X POST http://localhost:5000/api/biometric/register -H "Content-Type: application/json" \
+# 2. Buat wallet (idempotent)
+curl -s -X POST http://localhost:5000/api/wallets -H "$AUTH" -H "Content-Type: application/json" -d '{"user_id":"alice"}'
+
+# 3. Daftarkan perangkat biometrik, lalu verifikasi sidik jari -> biometric_token (berlaku 2 menit)
+curl -s -X POST http://localhost:5000/api/biometric/register -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"wallet_address":"<WALLET_ALICE>","device_id":"dev-1","device_name":"Pixel 8"}'
-curl -X POST http://localhost:5000/api/biometric/verify -H "Content-Type: application/json" \
+curl -s -X POST http://localhost:5000/api/biometric/verify -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"wallet_address":"<WALLET_ALICE>","device_id":"dev-1"}'   # -> {"token":"..."}
 
-# Transfer akad Sarf (1 Dinar = 4.25 gr emas, settlement kontan, WAJIB biometric_token)
-curl -X POST http://localhost:5000/api/transactions/transfer -H "Content-Type: application/json" \
+# 4. Transfer akad Sarf (1 Dinar = 4.25 gr emas, settlement kontan, WAJIB biometric_token)
+curl -s -X POST http://localhost:5000/api/transactions/transfer -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"sender":"<WALLET_ALICE>","receiver":"<WALLET_BOB>","amount":5,"akad_type":"SARF","biometric_token":"<TOKEN>"}'
 
-# QRIS (payload EMVCo TLV2 + gambar QR PNG base64)
-curl "http://localhost:5000/api/qris/<WALLET_ALICE>/payload?amount=5"
-curl "http://localhost:5000/api/qris/<WALLET_ALICE>/qr?amount=5"
+# 5. QRIS (payload EMVCo TLV2 + gambar QR PNG base64)
+curl -s "http://localhost:5000/api/qris/<WALLET_ALICE>/payload?amount=5" -H "$AUTH"
+curl -s "http://localhost:5000/api/qris/<WALLET_ALICE>/qr?amount=5" -H "$AUTH"
 
-# Audit cadangan emas (rasio proteksi syariah)
-curl http://localhost:5000/api/reserves/audit
+# 6. Audit cadangan emas (rasio proteksi syariah)
+curl -s http://localhost:5000/api/reserves/audit -H "$AUTH"
 ```
+
+---
+
+## 🔐 Role & Permission Management (RBAC)
+
+Semua endpoint API (kecuali `/auth/login`, `/auth/register`, `/health`) dilindungi **JWT** + **permission-based access control**. Verifikasi dilakukan middleware `requireAuth` (JWT) lalu `requirePermission(...)`.
+
+**Model**: `users`, `roles`, `permissions`, `user_roles`, `role_permissions`. Login mengeluarkan token JWT (default 12 jam) yang berisi identitas user; setiap request menyertakan `Authorization: Bearer <token>`.
+
+### Matriks permission per role
+
+| Permission | ADMIN | AUDITOR | NOTARY | LEGAL | USER |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `dashboard.view` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `transaction.read` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `transaction.transfer` | ✅ | — | — | — | ✅ |
+| `reserve.read` / `reserve.audit` | ✅ | ✅ | — | — | ✅ |
+| `reserve.create` | ✅ | ✅ | — | — | — |
+| `legal.read` | ✅ | — | ✅ | ✅ | ✅ |
+| `legal.sign` | ✅ | — | ✅ | — | — |
+| `legal.manage` | ✅ | — | ✅ | ✅ | — |
+| `biometric.manage` | ✅ | — | — | — | ✅ |
+| `qris.read` | ✅ | — | — | — | ✅ |
+| `wallet.create` / `wallet.read` | ✅ | — | — | — | ✅ |
+| `user:manage` (kelola user/role) | ✅ | — | — | — | — |
+
+> `ADMIN` punya wildcard `*` (semua permission). Seed otomatis dijalankan saat server start (`seedAcl`).
+
+### Endpoint auth
+```bash
+# Login
+curl -X POST http://localhost:5000/api/auth/login -H "Content-Type: application/json" \
+  -d '{"user_id":"admin","password":"admin123"}'            # -> {"token":"..."}
+
+# Ambil role & permission sendiri
+curl http://localhost:5000/api/auth/me -H "Authorization: Bearer <TOKEN>"
+
+# Hanya ADMIN bisa kelola role user
+curl -X POST http://localhost:5000/api/auth/users/<user_id>/roles -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" -d '{"role":"AUDITOR"}'
+```
+
+**Akun seed**: `admin/admin123` · `auditor/audit123` · `notaris/notar123` · `user/user123`.
 
 ---
 

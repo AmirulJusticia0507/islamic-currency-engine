@@ -1,11 +1,13 @@
 const NAV_ITEMS = [
-  { key: "dashboard", label: "📊 Dashboard" },
-  { key: "transactions", label: "🔁 Transaksi (Sarf)" },
-  { key: "reserves", label: "🥇 Vault Audit" },
-  { key: "legal", label: "⚖️ Legal & Notaris" },
+  { key: "dashboard", label: "📊 Dashboard", perm: "dashboard.view" },
+  { key: "transactions", label: "🔁 Transaksi (Sarf)", perm: "transaction.read" },
+  { key: "reserves", label: "🥇 Vault Audit", perm: "reserve.read" },
+  { key: "legal", label: "⚖️ Legal & Notaris", perm: "legal.read" },
 ];
 
-export function Navbar({ active, onChange }) {
+export function Navbar({ active, onChange, permissions = [], onLogout, user }) {
+  const visible = NAV_ITEMS.filter((i) => permissions.includes(i.perm) || permissions.includes("user:manage"));
+
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -17,7 +19,7 @@ export function Navbar({ active, onChange }) {
           </div>
         </div>
         <nav className="flex items-center gap-1">
-          {NAV_ITEMS.map((item) => (
+          {visible.map((item) => (
             <button
               key={item.key}
               onClick={() => onChange(item.key)}
@@ -31,6 +33,14 @@ export function Navbar({ active, onChange }) {
             </button>
           ))}
         </nav>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-slate-300 font-bold bg-slate-800/60 px-3 py-1.5 rounded-full">
+            {user?.user_id} · <span className="text-amber-400">{user?.roles?.join(", ")}</span>
+          </span>
+          <button onClick={onLogout} className="px-3 py-1.5 text-[11px] font-bold bg-rose-900 hover:bg-rose-800 text-white rounded-lg transition-all">
+            Logout
+          </button>
+        </div>
       </div>
     </header>
   );

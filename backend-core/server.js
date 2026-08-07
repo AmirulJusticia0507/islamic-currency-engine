@@ -1,6 +1,7 @@
 require("dotenv").config();
 const app = require("./app");
 const { sequelize } = require("./models");
+const { seedAcl } = require("./config/seedAcl");
 
 const PORT = process.env.PORT || 5000;
 
@@ -8,7 +9,8 @@ async function start() {
   try {
     await sequelize.authenticate();
     await sequelize.sync({ alter: false });
-    console.log(`[db] ${process.env.DB_DIALECT === "postgres" ? "CockroachDB (NewSQL)" : "SQLite (dev)"} terhubung`);
+    await seedAcl();
+    console.log(`[db] ${process.env.DB_DIALECT === "postgres" ? "CockroachDB (NewSQL)" : "SQLite (dev)"} terhubung + ACL seeded`);
     app.listen(PORT, () => {
       console.log(`[server] Islamic Currency Engine berjalan di http://localhost:${PORT}`);
     });

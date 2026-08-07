@@ -1,21 +1,29 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+String? _authToken;
+void setAuthToken(String? t) => _authToken = t;
+
 class CurrencyService {
   final String baseUrl;
 
   CurrencyService({this.baseUrl = 'http://10.0.2.2:5000/api'});
 
+  Map<String, String> _headers({bool json = false}) => {
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+        if (json) 'Content-Type': 'application/json',
+      };
+
   Future<Map<String, dynamic>> _get(String path) async {
-    final res = await http.get(Uri.parse('$baseUrl$path'));
-    if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
+    final res = await http.get(Uri.parse('$baseUrl$path'), headers: _headers());
+    if (res.statusCode != 200) throw Exception(_cleanError(res.body));
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> _post(String path, Map<String, dynamic> body) async {
     final res = await http.post(
       Uri.parse('$baseUrl$path'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode(body),
     );
     if (res.statusCode != 200 && res.statusCode != 201) {
@@ -32,6 +40,12 @@ class CurrencyService {
       return body;
     }
   }
+
+  Future<Map<String, dynamic>> login(String userId, String password) => _post('/auth/login', {'user_id': userId, 'password': password});
+
+  Future<Map<String, dynamic>> register(String userId, String password) => _post('/auth/register', {'user_id': userId, 'password': password});
+
+  Future<Map<String, dynamic>> me() => _get('/auth/me');
 
   Future<Map<String, dynamic>> getWallet(String address) => _get('/wallets/$address');
 
